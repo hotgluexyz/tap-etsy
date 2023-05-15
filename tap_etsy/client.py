@@ -29,7 +29,7 @@ class etsyStream(RESTStream):
     @property
     def url_base(self) -> str:
         """Return the API URL root, configurable via tap settings."""
-        shop_id = self.config.get("etsy_shop")
+        shop_id = self.config.get("shop_id")
         return f"https://openapi.etsy.com/v3/application/shops/{shop_id}"
 
     records_jsonpath = "$[*]"  # Or override `parse_response`.
