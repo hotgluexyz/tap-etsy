@@ -23,23 +23,6 @@ class Tapetsy(Tap):
             secret=True,  # Flag config as protected.
             description="The token to authenticate against the API service",
         ),
-        th.Property(
-            "project_ids",
-            th.ArrayType(th.StringType),
-            required=True,
-            description="Project IDs to replicate",
-        ),
-        th.Property(
-            "start_date",
-            th.DateTimeType,
-            description="The earliest record date to sync",
-        ),
-        th.Property(
-            "api_url",
-            th.StringType,
-            default="https://api.mysample.com",
-            description="The url for the API service",
-        ),
     ).to_dict()
 
     def discover_streams(self) -> list[streams.etsyStream]:
@@ -48,9 +31,8 @@ class Tapetsy(Tap):
         Returns:
             A list of discovered streams.
         """
-        return [
-            streams.GroupsStream(self),
-            streams.UsersStream(self),
+        return [          
+            streams.ShopTransactionStream(tap=self),
         ]
 
 
