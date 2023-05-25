@@ -17,12 +17,13 @@ class Tapetsy(Tap):
     # TODO: Update this section with the actual config values you expect:
     config_jsonschema = th.PropertiesList(
         th.Property(
-            "auth_token",
+            "client_id",
             th.StringType,
             required=True,
             secret=True,  # Flag config as protected.
             description="The token to authenticate against the API service",
         ),
+    
     ).to_dict()
 
     def discover_streams(self) -> list[streams.etsyStream]:

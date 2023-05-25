@@ -1,5 +1,5 @@
 """Stream type classes for tap-etsy."""
-# type: ignore 
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -7,7 +7,6 @@ from pathlib import Path
 from singer_sdk import typing as th  # JSON Schema typing helpers
 
 from tap_etsy.client import etsyStream
-
 
 class ShopTransactionStream(etsyStream):
     name = "shop_transactions"
