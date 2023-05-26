@@ -32,13 +32,13 @@ class MyPaginator(BaseOffsetPaginator):
 
 class etsyStream(RESTStream):
     """etsy stream class."""
-
+    
     @property
     def url_base(self) -> str:
         """Return the API URL root, configurable via tap settings."""
         shop_id = self.config["shop_id"]
         return f"https://openapi.etsy.com/v3/application/shops/{shop_id}"
-    records_jsonpath = "$[*]"  # Or override `parse_response`.
+    records_jsonpath = "$.results[*]"  # Or override `parse_response`.
 
     # Set this value or override `get_new_paginator`.
     next_page_token_jsonpath = "$.next_page"  # noqa: S105

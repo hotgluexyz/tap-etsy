@@ -34,11 +34,12 @@ class etsyAuthenticator(OAuthAuthenticator, metaclass=SingletonMeta):
         Returns:
             HTTP headers for authentication.
         """
+        result = super().auth_headers
         if not self.is_token_valid():
             self.update_access_token()
-        result = super().auth_headers
-        access_token = self.config["access_token"]
-        result["Authorization"] = f"Bearer {access_token}"
+        else:
+            access_token = self.config["access_token"]
+            result["Authorization"] = f"Bearer {access_token}"
         result["x-api-key"] = self.config["client_id"]
         return result
 
@@ -47,7 +48,7 @@ class etsyAuthenticator(OAuthAuthenticator, metaclass=SingletonMeta):
         now = round(datetime.utcnow().timestamp())
         expires_in = self.config.get("expires_in")
 
-        return not bool(
+        return  bool(
             # token is valid if now < request time + token expiration in seconds
             (not access_token) or (not expires_in) or (now < expires_in)
         )
@@ -76,23 +77,25 @@ class etsyAuthenticator(OAuthAuthenticator, metaclass=SingletonMeta):
         Raises:
             RuntimeError: When OAuth login fails.
         """
-        request_time = utc_now()
+        request_time = round(datetime.utcnow().timestamp())
         auth_request_payload = self.oauth_request_payload
         token_response = requests.post(self.auth_endpoint, data=auth_request_payload)
         try:
             token_response.raise_for_status()
-            self.logger.info("OAuth authorization attempt was successful.")
+            self.logger.info("OAuth authorization attempt refresh token was successful.")
         except Exception as ex:
             raise RuntimeError(
                 f"Failed OAuth login, response was '{token_response.json()}'. {ex}"
             )
         token_json = token_response.json()
         self.access_token = token_json["access_token"]
-        self.expires_in = token_json.get("expires_in", self._default_expiration)
+        expires_in =  request_time + token_json.get("expires_in", self._default_expiration)
+        self.expires_in = expires_in
         if self.expires_in is None:
             self.logger.debug(
                 "No expires_in receied in OAuth response and no "
                 "default_expiration set. Token will be treated as if it never "
                 "expires."
             )
+      
         self.last_refreshed = request_time
