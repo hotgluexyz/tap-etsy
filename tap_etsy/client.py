@@ -23,12 +23,16 @@ _Auth = Callable[[requests.PreparedRequest], requests.PreparedRequest]
 
 
 class MyPaginator(BaseOffsetPaginator):
+   
     def has_more(self, response):
         data = response.json()
-        if len(data.get("results", [])) == 0:
+        count = response.json().get("count", 0)
+        if self._page_count == 1:
+            #2nd page
+            count = count - 1 
+        if count == 0:
             return False
         return True
-
 
 class etsyStream(RESTStream):
     """etsy stream class."""

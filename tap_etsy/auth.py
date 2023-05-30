@@ -36,10 +36,8 @@ class etsyAuthenticator(OAuthAuthenticator, metaclass=SingletonMeta):
         """
         result = super().auth_headers
         if not self.is_token_valid():
-            self.update_access_token()
-        else:
-            access_token = self.config["access_token"]
-            result["Authorization"] = f"Bearer {access_token}"
+            access_token = self.access_token
+        result["Authorization"] = f"Bearer {access_token}"
         result["x-api-key"] = self.config["client_id"]
         return result
 
