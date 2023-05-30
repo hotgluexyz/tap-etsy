@@ -26,13 +26,8 @@ class MyPaginator(BaseOffsetPaginator):
    
     def has_more(self, response):
         data = response.json()
-        count = response.json().get("count", 0)
-        if self._page_count == 1:
-            #2nd page
-            count = count - 1 
-        if count == 0:
+        if len(data['results']) == 0:
             return False
-        return True
 
 class etsyStream(RESTStream):
     """etsy stream class."""
@@ -87,11 +82,10 @@ class etsyStream(RESTStream):
             A dictionary of URL query parameters.
         """
         params: dict = {}
+        params["limit"] = 100
         if next_page_token:
-            params["page"] = next_page_token
-        if self.replication_key:
-            params["sort"] = "asc"
-            params["order_by"] = self.replication_key
+            params["offset"] = next_page_token
+       
         return params
 
 
