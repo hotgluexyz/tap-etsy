@@ -177,3 +177,4 @@ class ShopReceiptStream(etsyStream):
         th.Property("transactions", th.CustomType({"type": ["array", "string"]})),
         th.Property("refunds", th.CustomType({"type": ["array", "string"]})),
     ).to_dict()
+

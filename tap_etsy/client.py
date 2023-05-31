@@ -126,5 +126,3 @@ class etsyStream(RESTStream):
         )
         self.validate_response(response)
         return response
-
-   
