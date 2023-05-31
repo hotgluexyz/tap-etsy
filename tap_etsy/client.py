@@ -5,7 +5,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 from typing import Any, Callable, Iterable
-
+ 
 import requests
 from singer_sdk.helpers.jsonpath import extract_jsonpath
 from singer_sdk.pagination import BaseOffsetPaginator  # noqa: TCH002
@@ -35,8 +35,8 @@ class etsyStream(RESTStream):
     @property
     def url_base(self) -> str:
         """Return the API URL root, configurable via tap settings."""
-        shop_id = self.config["shop_id"]
-        return f"https://openapi.etsy.com/v3/application/shops/{shop_id}"
+        
+        return f"https://openapi.etsy.com/v3/application/shops/shop_id"
     records_jsonpath = "$.results[*]"  # Or override `parse_response`.
 
     # Set this value or override `get_new_paginator`.
@@ -113,6 +113,8 @@ class etsyStream(RESTStream):
         Returns:
             TODO
         """
+        shop_id = self.authenticator.shop_id
+        prepared_request.url = prepared_request.url.replace("shop_id", str(shop_id)) 
         response = self.requests_session.send(prepared_request, timeout=self.timeout)
         self._write_request_duration_log(
             endpoint=self.path,
@@ -124,3 +126,5 @@ class etsyStream(RESTStream):
         )
         self.validate_response(response)
         return response
+
+   

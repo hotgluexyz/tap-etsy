@@ -11,6 +11,17 @@ from singer_sdk.helpers._util import utc_now
 # If this behaviour interferes with your use-case, you can remove the metaclass.
 class etsyAuthenticator(OAuthAuthenticator, metaclass=SingletonMeta):
     """Authenticator class for square."""
+
+    def __init__(self, stream, auth_endpoint: str):
+        super().__init__(stream, auth_endpoint=auth_endpoint)
+        self._auth_endpoint = auth_endpoint
+        
+        # Initialize internal tracking attributes
+        self.shop_id: str | None = None
+        self.access_token: str | None = None
+        self.refresh_token: str | None = None
+        self.last_refreshed: datetime | None = None
+        self.expires_in: int | None = None
     @property
     def oauth_request_body(self) -> dict:
         """Define the OAuth request body for the AutomaticTestTap API.
@@ -87,6 +98,12 @@ class etsyAuthenticator(OAuthAuthenticator, metaclass=SingletonMeta):
             )
         token_json = token_response.json()
         self.access_token = token_json["access_token"]
+        headers = {"Authorization": f"Bearer {self.access_token}", "x-api-key": self.config["client_id"]}
+        shop_name = self.config.get("shop_name")
+        response = requests.get(f"https://openapi.etsy.com/v3/application/shops?shop_name={shop_name}", headers=headers)
+        response = response.json()
+        self.shop_id = response["results"][0]["shop_id"]
+        self.logger.info(f"Shop ID is {self.shop_id}")
         expires_in =  request_time + token_json.get("expires_in", self._default_expiration)
         self.expires_in = expires_in
         if self.expires_in is None:
