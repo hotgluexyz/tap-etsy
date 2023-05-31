@@ -34,6 +34,7 @@ class Tapetsy(Tap):
         """
         return [          
             streams.ShopTransactionStream(tap=self),
+            streams.ShopReceiptStream(tap=self),
         ]
 
 
