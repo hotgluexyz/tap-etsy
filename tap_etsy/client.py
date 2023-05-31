@@ -5,7 +5,6 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 from typing import Any, Callable, Iterable
- 
 import requests
 from singer_sdk.helpers.jsonpath import extract_jsonpath
 from singer_sdk.pagination import BaseOffsetPaginator  # noqa: TCH002
