@@ -134,51 +134,6 @@ class ShopListingStream(etsyStream):
         th.Property("translations", th.CustomType({"type": ["array", "string"]})),            
         th.Property("views", th.IntegerType),
     ).to_dict()
-class ShopReceiptStream(etsyStream):
-    name = "shop_receipts"
-    path = "/receipts"
-    primary_keys = ["receipt_id"]
-    schema = th.PropertiesList(
-        th.Property("transaction_id", th.IntegerType),
-        th.Property("receipt_id", th.IntegerType),
-        th.Property("receipt_type", th.IntegerType),
-        th.Property("seller_user_id", th.IntegerType),
-        th.Property("seller_email", th.StringType),
-        th.Property("buyer_user_id", th.IntegerType),
-        th.Property("buyer_email", th.StringType),
-        th.Property("name", th.StringType),
-        th.Property("first_line", th.StringType),
-        th.Property("second_line", th.StringType),
-        th.Property("city", th.StringType),
-        th.Property("state", th.StringType),
-        th.Property("zip", th.StringType),
-        th.Property("status", th.StringType),
-        th.Property("formatted_address", th.StringType),
-        th.Property("country_iso", th.StringType),
-        th.Property("payment_method", th.StringType),
-        th.Property("payment_email", th.StringType),
-        th.Property("message_from_seller", th.StringType),
-        th.Property("message_from_buyer", th.StringType),
-        th.Property("message_from_payment", th.StringType),
-        th.Property("is_paid", th.BooleanType),
-        th.Property("is_shipped", th.BooleanType),
-        th.Property("create_timestamp", th.IntegerType),
-        th.Property("created_timestamp", th.IntegerType),
-        th.Property("update_timestamp", th.IntegerType),
-        th.Property("updated_timestamp", th.IntegerType),
-        th.Property("is_gift", th.BooleanType),
-        th.Property("gift_message", th.StringType),
-        th.Property("grandtotal", th.CustomType({"type": ["object", "string"]})),
-        th.Property("subtotal", th.CustomType({"type": ["object", "string"]})),
-        th.Property("total_price", th.CustomType({"type": ["object", "string"]})),
-        th.Property("total_vat_cost", th.CustomType({"type": ["object", "string"]})),
-        th.Property("discount_amt", th.CustomType({"type": ["object", "string"]})),
-        th.Property("gift_wrap_price", th.CustomType({"type": ["object", "string"]})),
-        th.Property("shipments", th.CustomType({"type": ["array", "string"]})),
-        th.Property("transactions", th.CustomType({"type": ["array", "string"]})),
-        th.Property("refunds", th.CustomType({"type": ["array", "string"]})),
-    ).to_dict()
-
 
 
 
