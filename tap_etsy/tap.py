@@ -35,6 +35,7 @@ class Tapetsy(Tap):
         return [          
             streams.ShopTransactionStream(tap=self),
             streams.ShopReceiptStream(tap=self),
+            streams.ShippingProfileStream(tap=self),
         ]
 
 

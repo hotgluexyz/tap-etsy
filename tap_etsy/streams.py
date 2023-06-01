@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-
+from typing import Optional
 from singer_sdk import typing as th  # JSON Schema typing helpers
 
 from tap_etsy.client import etsyStream
@@ -170,7 +170,10 @@ class ShopReceiptStream(etsyStream):
         th.Property("grandtotal", th.CustomType({"type": ["object", "string"]})),
         th.Property("subtotal", th.CustomType({"type": ["object", "string"]})),
         th.Property("total_price", th.CustomType({"type": ["object", "string"]})),
+        th.Property("shipping_profile_id", th.IntegerType),
+        th.Property("total_shipping_cost", th.CustomType({"type": ["object", "string"]})),
         th.Property("total_vat_cost", th.CustomType({"type": ["object", "string"]})),
+        th.Property("total_tax_cost", th.CustomType({"type": ["object", "string"]})),
         th.Property("discount_amt", th.CustomType({"type": ["object", "string"]})),
         th.Property("gift_wrap_price", th.CustomType({"type": ["object", "string"]})),
         th.Property("shipments", th.CustomType({"type": ["array", "string"]})),
@@ -178,3 +181,71 @@ class ShopReceiptStream(etsyStream):
         th.Property("refunds", th.CustomType({"type": ["array", "string"]})),
     ).to_dict()
 
+
+class ShippingProfileStream(etsyStream):
+    name = "shipping_profiles"
+
+    path = "/shipping-profiles"
+    # parent_stream_type = ShopReceiptStream
+    primary_keys = ["shipping_profile_id"]
+    schema = th.PropertiesList(
+        th.Property("shipping_profile_id", th.IntegerType),
+        th.Property("title", th.StringType),
+        th.Property("user_id", th.IntegerType),
+        th.Property("min_processing_days", th.IntegerType),
+        th.Property("max_processing_days", th.IntegerType),
+        th.Property("processing_days_display_label", th.StringType),
+        th.Property("origin_country_iso", th.StringType),
+        th.Property("is_deleted", th.BooleanType),
+        th.Property("shipping_profile_destinations", th.ArrayType(
+            th.ObjectType(
+                th.Property("shipping_profile_destination_id", th.IntegerType),
+                th.Property("shipping_profile_id", th.IntegerType),
+                th.Property("origin_country_iso", th.StringType),
+                th.Property("destination_country_iso", th.StringType),
+                th.Property("destination_region", th.StringType),
+                th.Property("primary_cost", th.ObjectType(
+                    th.Property("amount", th.IntegerType),
+                    th.Property("divisor", th.IntegerType),
+                    th.Property("currency_code", th.StringType),
+                )),
+                th.Property("secondary_cost", th.ObjectType(
+                    th.Property("amount", th.IntegerType),
+                    th.Property("divisor", th.IntegerType),
+                    th.Property("currency_code", th.StringType),
+                )),
+                th.Property("shipping_carrier_id", th.IntegerType),
+                th.Property("mail_class", th.StringType),
+                th.Property("min_delivery_days", th.IntegerType),
+                th.Property("max_delivery_days", th.IntegerType),
+            )
+        )),
+        th.Property("shipping_profile_upgrades", th.ArrayType(
+            th.ObjectType(
+                th.Property("shipping_profile_id", th.IntegerType),
+                th.Property("upgrade_id", th.IntegerType),
+                th.Property("upgrade_name", th.StringType),
+                th.Property("type", th.StringType),
+                th.Property("rank", th.IntegerType),
+                th.Property("language", th.StringType),
+                th.Property("price", th.ObjectType(
+                    th.Property("amount", th.IntegerType),
+                    th.Property("divisor", th.IntegerType),
+                    th.Property("currency_code", th.StringType),
+                )),
+                th.Property("secondary_price", th.ObjectType(
+                    th.Property("amount", th.IntegerType),
+                    th.Property("divisor", th.IntegerType),
+                    th.Property("currency_code", th.StringType),
+                )),
+                th.Property("shipping_carrier_id", th.IntegerType),
+                th.Property("mail_class", th.StringType),
+                th.Property("min_delivery_days", th.IntegerType),
+                th.Property("max_delivery_days", th.IntegerType),
+            )
+        )),
+        th.Property("origin_postal_code", th.StringType),
+        th.Property("profile_type", th.StringType),
+        th.Property("domestic_handling_fee", th.NumberType),
+        th.Property("international_handling_fee", th.NumberType),
+    ).to_dict()
