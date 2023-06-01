@@ -184,9 +184,7 @@ class ShopReceiptStream(etsyStream):
 
 class ShippingProfileStream(etsyStream):
     name = "shipping_profiles"
-
     path = "/shipping-profiles"
-    # parent_stream_type = ShopReceiptStream
     primary_keys = ["shipping_profile_id"]
     schema = th.PropertiesList(
         th.Property("shipping_profile_id", th.IntegerType),
