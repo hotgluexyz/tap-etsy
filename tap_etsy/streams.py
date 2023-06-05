@@ -171,6 +171,8 @@ class ShopReceiptStream(etsyStream):
         th.Property("subtotal", th.CustomType({"type": ["object", "string"]})),
         th.Property("total_price", th.CustomType({"type": ["object", "string"]})),
         th.Property("total_vat_cost", th.CustomType({"type": ["object", "string"]})),
+        th.Property("total_tax_cost", th.CustomType({"type": ["object", "string"]})),
+        th.Property("total_shipping_cost", th.CustomType({"type": ["object", "string"]})),
         th.Property("discount_amt", th.CustomType({"type": ["object", "string"]})),
         th.Property("gift_wrap_price", th.CustomType({"type": ["object", "string"]})),
         th.Property("shipments", th.CustomType({"type": ["array", "string"]})),
