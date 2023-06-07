@@ -137,6 +137,7 @@ class ShopReceiptStream(etsyStream):
     name = "shop_receipts"
     path = "/receipts"
     primary_keys = ["receipt_id"]
+    replication_key = "updated_timestamp"
     schema = th.PropertiesList(
         th.Property("transaction_id", th.IntegerType),
         th.Property("receipt_id", th.IntegerType),
@@ -164,7 +165,7 @@ class ShopReceiptStream(etsyStream):
         th.Property("create_timestamp", th.IntegerType),
         th.Property("created_timestamp", th.IntegerType),
         th.Property("update_timestamp", th.IntegerType),
-        th.Property("updated_timestamp", th.IntegerType),
+        th.Property("updated_timestamp", th.DateTimeType),
         th.Property("is_gift", th.BooleanType),
         th.Property("gift_message", th.StringType),
         th.Property("grandtotal", th.CustomType({"type": ["object", "string"]})),
