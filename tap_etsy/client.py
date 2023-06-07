@@ -9,7 +9,7 @@ import requests
 from singer_sdk.helpers.jsonpath import extract_jsonpath
 from singer_sdk.pagination import BaseOffsetPaginator  # noqa: TCH002
 from singer_sdk.streams import RESTStream
-
+import datetime
 from tap_etsy.auth import etsyAuthenticator
 
 if sys.version_info >= (3, 8):
@@ -84,7 +84,12 @@ class etsyStream(RESTStream):
         params["limit"] = 100
         if next_page_token:
             params["offset"] = next_page_token
-       
+        if self.replication_key:
+            timestamp = self.get_starting_timestamp(context)
+            if timestamp:
+                unix_time = datetime.datetime.timestamp(timestamp)
+                params["min_last_modified"] = unix_time
+            
         return params
 
 
@@ -97,8 +102,12 @@ class etsyStream(RESTStream):
         Yields:
             Each record from the source.
         """
-        # TODO: Parse response body and return a set of records.
-        yield from extract_jsonpath(self.records_jsonpath, input=response.json())
+        response_mapped = response.json()
+        if self.replication_key:
+            for record in response_mapped["results"]:
+                record["updated_timestamp"] = datetime.datetime.fromtimestamp(record["updated_timestamp"])
+
+        yield from extract_jsonpath(self.records_jsonpath, input=response_mapped)
 
     def _request(
         self, prepared_request: requests.PreparedRequest, context: dict | None
