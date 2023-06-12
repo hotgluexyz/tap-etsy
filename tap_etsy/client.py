@@ -10,6 +10,7 @@ from singer_sdk.helpers.jsonpath import extract_jsonpath
 from singer_sdk.pagination import BaseOffsetPaginator  # noqa: TCH002
 from singer_sdk.streams import RESTStream
 import datetime
+from requests import Response
 from tap_etsy.auth import etsyAuthenticator
 
 if sys.version_info >= (3, 8):
@@ -27,6 +28,19 @@ class MyPaginator(BaseOffsetPaginator):
         data = response.json()
         if len(data['results']) == 0:
             return False
+        return True
+    
+    def get_next(self, response: Response) -> int | None:
+        """Get the next page offset.
+
+        Args:
+            response: API response object.
+
+        Returns:
+            The next page offset.
+        """
+        return self._value + self._page_size
+
 
 class etsyStream(RESTStream):
     """etsy stream class."""
