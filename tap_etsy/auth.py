@@ -6,13 +6,14 @@ from singer_sdk.authenticators import OAuthAuthenticator, SingletonMeta
 from datetime import datetime, timedelta
 import requests
 from singer_sdk.helpers._util import utc_now
+import json
 
 # The SingletonMeta metaclass makes your streams reuse the same authenticator instance.
 # If this behaviour interferes with your use-case, you can remove the metaclass.
 class etsyAuthenticator(OAuthAuthenticator, metaclass=SingletonMeta):
     """Authenticator class for square."""
 
-    def __init__(self, stream, auth_endpoint: str):
+    def __init__(self, stream,auth_endpoint: str):
         super().__init__(stream, auth_endpoint=auth_endpoint)
         self._auth_endpoint = auth_endpoint
         
@@ -22,6 +23,9 @@ class etsyAuthenticator(OAuthAuthenticator, metaclass=SingletonMeta):
         self.refresh_token: str | None = None
         self.last_refreshed: datetime | None = None
         self.expires_in: int | None = None
+        self._tap = stream._tap
+        self._tap_config = dict(self._tap.config)
+
     @property
     def oauth_request_body(self) -> dict:
         """Define the OAuth request body for the AutomaticTestTap API.
@@ -112,5 +116,10 @@ class etsyAuthenticator(OAuthAuthenticator, metaclass=SingletonMeta):
                 "default_expiration set. Token will be treated as if it never "
                 "expires."
             )
+        self._tap_config['access_token'] = self.access_token
+        self._tap_config['refresh_token'] = response['refresh_token']
+        self._tap_config['expires_in'] = expires_in
+        with open("config.json", "w") as outfile:
+            json.dump(self._tap_config, outfile, indent=4)    
       
         self.last_refreshed = request_time
