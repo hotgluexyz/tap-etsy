@@ -18,7 +18,6 @@ class etsyAuthenticator(OAuthAuthenticator, metaclass=SingletonMeta):
         self._auth_endpoint = auth_endpoint
         
         # Initialize internal tracking attributes
-        self.shop_id: str | None = None
         self.access_token: str | None = None
         self.refresh_token: str | None = None
         self.last_refreshed: datetime | None = None
@@ -51,19 +50,29 @@ class etsyAuthenticator(OAuthAuthenticator, metaclass=SingletonMeta):
         """
         result = super().auth_headers
         if not self.is_token_valid():
-            access_token = self.access_token
+            self.update_access_token
+        access_token = self.config.get("access_token")
         result["Authorization"] = f"Bearer {access_token}"
         result["x-api-key"] = self.config["client_id"]
         return result
+    
+    @property
+    def shop_id(self) -> dict:
+        shop_name = self.config.get("shop_name")
+        response = requests.get(f"https://openapi.etsy.com/v3/application/shops?shop_name={shop_name}", headers=self.auth_headers)
+        response = response.json()
+        shop_id = response["results"][0]["shop_id"]
+        self.logger.info(f"Shop ID is {shop_id}")
+        return shop_id
 
     def is_token_valid(self) -> bool:
         access_token = self.config.get("access_token")
         now = round(datetime.utcnow().timestamp())
         expires_in = self.config.get("expires_in")
 
-        return  bool(
+        return not bool(
             # token is valid if now < request time + token expiration in seconds
-            (not access_token) or (not expires_in) or (now < expires_in)
+            (not access_token) or (not expires_in) or (expires_in - now < 60)
         )
 
 
@@ -103,11 +112,6 @@ class etsyAuthenticator(OAuthAuthenticator, metaclass=SingletonMeta):
         token_json = token_response.json()
         self.access_token = token_json["access_token"]
         headers = {"Authorization": f"Bearer {self.access_token}", "x-api-key": self.config["client_id"]}
-        shop_name = self.config.get("shop_name")
-        response = requests.get(f"https://openapi.etsy.com/v3/application/shops?shop_name={shop_name}", headers=headers)
-        response = response.json()
-        self.shop_id = response["results"][0]["shop_id"]
-        self.logger.info(f"Shop ID is {self.shop_id}")
         expires_in =  request_time + token_json.get("expires_in", self._default_expiration)
         self.expires_in = expires_in
         if self.expires_in is None:
