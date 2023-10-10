@@ -117,7 +117,7 @@ class etsyAuthenticator(OAuthAuthenticator, metaclass=SingletonMeta):
                 "expires."
             )
         self._tap_config['access_token'] = self.access_token
-        self._tap_config['refresh_token'] = response['refresh_token']
+        self._tap_config['refresh_token'] = token_json.get("refresh_token")
         self._tap_config['expires_in'] = expires_in
         with open("config.json", "w") as outfile:
             json.dump(self._tap_config, outfile, indent=4)    
