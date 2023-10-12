@@ -51,7 +51,11 @@ class etsyAuthenticator(OAuthAuthenticator, metaclass=SingletonMeta):
         result = super().auth_headers
         if not self.is_token_valid():
             self.update_access_token
-        access_token = self.config.get("access_token")
+
+        if not self.access_token:    
+            access_token = self.config.get("access_token")
+        else:
+            access_token = self.access_token    
         result["Authorization"] = f"Bearer {access_token}"
         result["x-api-key"] = self.config["client_id"]
         return result
@@ -60,6 +64,8 @@ class etsyAuthenticator(OAuthAuthenticator, metaclass=SingletonMeta):
     def shop_id(self) -> dict:
         shop_name = self.config.get("shop_name")
         response = requests.get(f"https://openapi.etsy.com/v3/application/shops?shop_name={shop_name}", headers=self.auth_headers)
+        #If token is invalid raise the exception
+        response.raise_for_status()
         response = response.json()
         shop_id = response["results"][0]["shop_id"]
         self.logger.info(f"Shop ID is {shop_id}")
