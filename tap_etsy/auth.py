@@ -78,7 +78,7 @@ class etsyAuthenticator(OAuthAuthenticator, metaclass=SingletonMeta):
 
         return not bool(
             # token is valid if now < request time + token expiration in seconds
-            (not access_token) or (not expires_in) or (expires_in - now < 60)
+            (not access_token) or (not expires_in) or (expires_in - now < 120)
         )
 
 
