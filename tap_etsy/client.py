@@ -101,7 +101,7 @@ class etsyStream(RESTStream):
         if self.replication_key:
             timestamp = self.get_starting_timestamp(context)
             if timestamp:
-                unix_time = datetime.datetime.timestamp(timestamp)
+                unix_time = int(datetime.datetime.timestamp(timestamp))
                 params["min_last_modified"] = unix_time
             
         return params
