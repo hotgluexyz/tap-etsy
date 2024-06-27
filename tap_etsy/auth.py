@@ -62,19 +62,35 @@ class etsyAuthenticator(OAuthAuthenticator, metaclass=SingletonMeta):
     
     @property
     def shop_id(self) -> dict:
-        shop_id = self.config.get("shop_id") or self.config.get("shop_name")
-        if not shop_id:
-            raise Exception("Shop ID and shop name not found in config file.")
+        shop_id = self.config.get("shop_id", "")
+        shop_name =  self.config.get("shop_name", "")
+        if not shop_id and not shop_name:
+            raise Exception("Shop id and shop name not found in config file.")
         if shop_id and shop_id.isdigit():
             return int(shop_id)
         else:
+            # try to get shop_id by shop_id
             response = requests.get(f"https://openapi.etsy.com/v3/application/shops?shop_name={shop_id}", headers=self.auth_headers)
             #If token is invalid raise the exception
             response.raise_for_status()
             response = response.json()
-            shop_id = response["results"][0]["shop_id"]
-            self.logger.info(f"Shop ID is {shop_id}")
-            return shop_id
+            if response["results"]:
+                shop_id = response["results"][0]["shop_id"]
+                self.logger.info(f"Shop ID is {shop_id}")
+                return shop_id
+            
+            # try to get shop_id by shop_name
+            response = requests.get(f"https://openapi.etsy.com/v3/application/shops?shop_name={shop_name}", headers=self.auth_headers)
+            #If token is invalid raise the exception
+            response.raise_for_status()
+            response = response.json()
+            if response["results"]:
+                shop_id = response["results"][0]["shop_id"]
+                self.logger.info(f"Shop ID is {shop_id}")
+                return shop_id
+
+            # raise an exception if shop id was not found with shop_id or shop_name
+            raise Exception(f"Shop id not found for shop_id {shop_id} or for shop_name {shop_name}")
 
     def is_token_valid(self) -> bool:
         access_token = self.config.get("access_token")
