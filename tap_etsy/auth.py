@@ -69,25 +69,27 @@ class etsyAuthenticator(OAuthAuthenticator, metaclass=SingletonMeta):
         if shop_id and shop_id.isdigit():
             return int(shop_id)
         else:
-            # try to get shop_id by shop_id
-            response = requests.get(f"https://openapi.etsy.com/v3/application/shops?shop_name={shop_id}", headers=self.auth_headers)
-            #If token is invalid raise the exception
-            response.raise_for_status()
-            response = response.json()
-            if response["results"]:
-                shop_id = response["results"][0]["shop_id"]
-                self.logger.info(f"Shop ID is {shop_id}")
-                return shop_id
+            if shop_id:
+                # try to get shop_id by shop_id
+                response = requests.get(f"https://openapi.etsy.com/v3/application/shops?shop_name={shop_id}", headers=self.auth_headers)
+                #If token is invalid raise the exception
+                response.raise_for_status()
+                response = response.json()
+                if response["results"]:
+                    shop_id = response["results"][0]["shop_id"]
+                    self.logger.info(f"Shop ID is {shop_id}")
+                    return shop_id
             
-            # try to get shop_id by shop_name
-            response = requests.get(f"https://openapi.etsy.com/v3/application/shops?shop_name={shop_name}", headers=self.auth_headers)
-            #If token is invalid raise the exception
-            response.raise_for_status()
-            response = response.json()
-            if response["results"]:
-                shop_id = response["results"][0]["shop_id"]
-                self.logger.info(f"Shop ID is {shop_id}")
-                return shop_id
+            if shop_name:
+                # try to get shop_id by shop_name
+                response = requests.get(f"https://openapi.etsy.com/v3/application/shops?shop_name={shop_name}", headers=self.auth_headers)
+                #If token is invalid raise the exception
+                response.raise_for_status()
+                response = response.json()
+                if response["results"]:
+                    shop_id = response["results"][0]["shop_id"]
+                    self.logger.info(f"Shop ID is {shop_id}")
+                    return shop_id
 
             # raise an exception if shop id was not found with shop_id or shop_name
             raise Exception(f"Shop id not found for shop_id {shop_id} or for shop_name {shop_name}")
