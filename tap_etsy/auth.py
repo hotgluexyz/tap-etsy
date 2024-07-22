@@ -61,23 +61,27 @@ class etsyAuthenticator(OAuthAuthenticator, metaclass=SingletonMeta):
         return result
     
     def clean_shop_name(self, shop_name):
-        if ".etsy." in shop_name:
-            shop_name = shop_name.split(".etsy.")[0]
-            if shop_name:
-                return shop_name
+        # if .etsy. is in shop_name get the first part of the string
+        if ".etsy." in shop_name and shop_name.split(".etsy.")[0]:
+            return shop_name.split(".etsy.")[0]
+        # else use shop_name as it is
+        return shop_name
     
     @property
     def shop_id(self) -> dict:
         shop_id = self.config.get("shop_id", "")
         shop_name =  self.config.get("shop_name", "")
+        # fail if nor shop_id nor shop_name is in the config file
         if not shop_id and not shop_name:
             raise Exception("Shop id and shop name not found in config file.")
+        # if shop id is a digit use that as it is -> currently there's no additional validation
         if shop_id and shop_id.isdigit():
             return int(shop_id)
         else:
+            # if shop id is not a digit ot not provided look for a match to shop_name
             if shop_id:
                 shop_id = self.clean_shop_name(shop_id)
-                # try to get shop_id by shop_id
+                # try to find the shop matching shop_id to shop_name
                 response = requests.get(f"https://openapi.etsy.com/v3/application/shops?shop_name={shop_id}", headers=self.auth_headers)
                 #If token is invalid raise the exception
                 response.raise_for_status()
@@ -89,7 +93,7 @@ class etsyAuthenticator(OAuthAuthenticator, metaclass=SingletonMeta):
             
             if shop_name:
                 shop_name = self.clean_shop_name(shop_name)
-                # try to get shop_id by shop_name
+                # try to find the shop matching shop_name to shop_name
                 response = requests.get(f"https://openapi.etsy.com/v3/application/shops?shop_name={shop_name}", headers=self.auth_headers)
                 #If token is invalid raise the exception
                 response.raise_for_status()
@@ -99,7 +103,7 @@ class etsyAuthenticator(OAuthAuthenticator, metaclass=SingletonMeta):
                     self.logger.info(f"Shop ID is {shop_id}")
                     return shop_id
 
-            # raise an exception if shop id was not found with shop_id or shop_name
+            # raise an exception if no match was found
             raise Exception(f"Shop id not found for shop_id {shop_id} or for shop_name {shop_name}")
 
     def is_token_valid(self) -> bool:
