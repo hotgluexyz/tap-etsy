@@ -61,12 +61,10 @@ class etsyAuthenticator(OAuthAuthenticator, metaclass=SingletonMeta):
         return result
     
     def clean_shop_name(self, shop_name):
-        try:
-            if ".etsy." in shop_name:
-                shop_name = shop_name.split(".etsy.")[0]
+        if ".etsy." in shop_name:
+            shop_name = shop_name.split(".etsy.")[0]
+            if shop_name:
                 return shop_name
-        except:
-            raise Exception(f"There was an error processing the shop_id or shop_name, please make sure these values are correct")
     
     @property
     def shop_id(self) -> dict:
