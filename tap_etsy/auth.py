@@ -60,6 +60,14 @@ class etsyAuthenticator(OAuthAuthenticator, metaclass=SingletonMeta):
         result["x-api-key"] = self.config["client_id"]
         return result
     
+    def clean_shop_name(self, shop_name):
+        try:
+            if ".etsy." in shop_name:
+                shop_name = shop_name.split(".etsy.")[0]
+                return shop_name
+        except:
+            raise Exception(f"There was an error processing the shop_id or shop_name, please make sure these values are correct")
+    
     @property
     def shop_id(self) -> dict:
         shop_id = self.config.get("shop_id", "")
@@ -70,6 +78,7 @@ class etsyAuthenticator(OAuthAuthenticator, metaclass=SingletonMeta):
             return int(shop_id)
         else:
             if shop_id:
+                shop_id = self.clean_shop_name(shop_id)
                 # try to get shop_id by shop_id
                 response = requests.get(f"https://openapi.etsy.com/v3/application/shops?shop_name={shop_id}", headers=self.auth_headers)
                 #If token is invalid raise the exception
@@ -81,6 +90,7 @@ class etsyAuthenticator(OAuthAuthenticator, metaclass=SingletonMeta):
                     return shop_id
             
             if shop_name:
+                shop_name = self.clean_shop_name(shop_name)
                 # try to get shop_id by shop_name
                 response = requests.get(f"https://openapi.etsy.com/v3/application/shops?shop_name={shop_name}", headers=self.auth_headers)
                 #If token is invalid raise the exception
