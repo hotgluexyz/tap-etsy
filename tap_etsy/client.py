@@ -12,6 +12,8 @@ from singer_sdk.streams import RESTStream
 import datetime
 from requests import Response
 from tap_etsy.auth import etsyAuthenticator
+from http import HTTPStatus
+from singer_sdk.exceptions import FatalAPIError, RetriableAPIError
 
 if sys.version_info >= (3, 8):
     from functools import cached_property
@@ -148,3 +150,21 @@ class etsyStream(RESTStream):
         )
         self.validate_response(response)
         return response
+    
+    def validate_response(self, response: requests.Response) -> None:
+        if (
+            response.status_code in self.extra_retry_statuses
+            or HTTPStatus.INTERNAL_SERVER_ERROR
+            <= response.status_code
+            <= max(HTTPStatus)
+        ):
+            msg = self.response_error_message(response)
+            raise RetriableAPIError(f"{msg} with response: {response.text}")
+
+        if (
+            HTTPStatus.BAD_REQUEST
+            <= response.status_code
+            < HTTPStatus.INTERNAL_SERVER_ERROR
+        ):
+            msg = self.response_error_message(response)
+            raise FatalAPIError(f"{msg} with response: {response.text}")
