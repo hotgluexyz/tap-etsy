@@ -224,7 +224,7 @@ class ShippingProfileStream(etsyStream):
                 th.Property("shipping_profile_id", th.IntegerType),
                 th.Property("upgrade_id", th.IntegerType),
                 th.Property("upgrade_name", th.StringType),
-                th.Property("type", th.StringType),
+                th.Property("type", th.IntegerType),
                 th.Property("rank", th.IntegerType),
                 th.Property("language", th.StringType),
                 th.Property("price", th.ObjectType(
