@@ -121,7 +121,7 @@ class etsyAuthenticator(OAuthAuthenticator, metaclass=SingletonMeta):
     def is_token_valid(self) -> bool:
         access_token = self.config.get("access_token")
         now = round(datetime.utcnow().timestamp())
-        expires_in = self.config.get("expires_in")
+        expires_in = self.expires_in
 
         return not bool(
             # token is valid if now < request time + token expiration in seconds
