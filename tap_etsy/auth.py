@@ -50,7 +50,7 @@ class etsyAuthenticator(OAuthAuthenticator, metaclass=SingletonMeta):
         """
         result = super().auth_headers
         if not self.is_token_valid():
-            self.update_access_token
+            self.update_access_token()
 
         if not self.access_token:    
             access_token = self.config.get("access_token")
