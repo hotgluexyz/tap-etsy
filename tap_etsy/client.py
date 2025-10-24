@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import sys
+import time
 from pathlib import Path
 from typing import Any, Callable, Iterable
 import requests
@@ -158,6 +159,19 @@ class etsyStream(RESTStream):
             <= response.status_code
             <= max(HTTPStatus)
         ):
+            if response.status_code == 429:
+                try:
+                    header_keys_to_log = ["x-limit-per-second", "x-remaining-this-second", "x-limit-per-day", "x-remaining-today", "retry-after"]
+                    headers_to_log = {key: response.headers.get(key) for key in header_keys_to_log}
+
+                    self.logger.info(f"Request failed with 429 status code. Response headers: {headers_to_log}")
+                    retry_after_seconds = int(response.headers.get("retry-after"))
+                    self.logger.info(f"Sleeping for {retry_after_seconds} seconds.")
+                    # will sleep for {retry_after_seconds} seconds then it'll raise the RetryAfterException so the request will be retried
+                    time.sleep(retry_after_seconds)
+                except Exception as e:
+                    self.logger.exception("Request failed with 429 status code and no retry-after header. Falling back to default backoff strategy")
+
             msg = self.response_error_message(response)
             raise RetriableAPIError(f"{msg} with response: {response.text}")
 
