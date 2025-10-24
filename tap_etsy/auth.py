@@ -7,6 +7,12 @@ from datetime import datetime, timedelta
 import requests
 from singer_sdk.helpers._util import utc_now
 import json
+import sys
+
+if sys.version_info >= (3, 8):
+    from functools import cached_property
+else:
+    from cached_property import cached_property
 
 # The SingletonMeta metaclass makes your streams reuse the same authenticator instance.
 # If this behaviour interferes with your use-case, you can remove the metaclass.
@@ -74,7 +80,7 @@ class etsyAuthenticator(OAuthAuthenticator, metaclass=SingletonMeta):
         # else use shop_name as it is
         return clean_shop_name
     
-    @property
+    @cached_property
     def shop_id(self) -> dict:
         shop_id = self.config.get("shop_id", "")
         shop_name =  self.config.get("shop_name", "")
