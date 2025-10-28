@@ -11,7 +11,7 @@ from tap_etsy.client import etsyStream
 class ShopTransactionStream(etsyStream):
     name = "shop_transactions"
     path = "/transactions"
-    pagination = False
+    paginated_stream = True
     primary_keys = ["transaction_id"]
     schema = th.PropertiesList(
         th.Property("transaction_id", th.IntegerType),
@@ -68,7 +68,7 @@ class ShopTransactionStream(etsyStream):
 class ShopListingStream(etsyStream):
     name = "shop_listings"
     path = "/listings"
-    pagination = False
+    paginated_stream = True
     primary_keys = ["listing_id"]
     schema = th.PropertiesList(
         th.Property("transaction_id", th.IntegerType),
@@ -187,6 +187,7 @@ class ShippingProfileStream(etsyStream):
     name = "shipping_profiles"
     path = "/shipping-profiles"
     primary_keys = ["shipping_profile_id"]
+    paginated_stream = False
     schema = th.PropertiesList(
         th.Property("shipping_profile_id", th.IntegerType),
         th.Property("title", th.StringType),
