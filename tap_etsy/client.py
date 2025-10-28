@@ -27,7 +27,19 @@ _Auth = Callable[[requests.PreparedRequest], requests.PreparedRequest]
 
 class MyPaginator(BaseOffsetPaginator):
    
+    def __init__(
+        self,
+        start_value: int,
+        page_size: int,
+        *args: t.Any,
+        **kwargs: t.Any,
+    ) -> None:
+        self.paginated_stream = kwargs.pop("paginated_stream", False)
+        super().__init__(start_value, page_size, *args, **kwargs)
+
     def has_more(self, response):
+        if not self.paginated_stream:
+            return False
         data = response.json()
         if len(data['results']) == 0:
             return False
@@ -47,6 +59,8 @@ class MyPaginator(BaseOffsetPaginator):
 
 class etsyStream(RESTStream):
     """etsy stream class."""
+
+    paginated_stream = True
     
     @property
     def url_base(self) -> str:
@@ -81,7 +95,7 @@ class etsyStream(RESTStream):
         return headers
 
     def get_new_paginator(self):
-        return MyPaginator(start_value=0, page_size=100)
+        return MyPaginator(start_value=0, page_size=100, paginated_stream=self.paginated_stream)
 
     def get_url_params(
         self,
