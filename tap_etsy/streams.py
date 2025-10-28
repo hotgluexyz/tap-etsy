@@ -62,8 +62,8 @@ class ShopTransactionStream(etsyStream):
         th.Property("shipping_method", th.StringType),
         th.Property("shipping_upgrade", th.StringType),
         th.Property("expected_ship_date", th.IntegerType),
-        th.Property("buyer_coupon", th.IntegerType),
-        th.Property("shop_coupon", th.IntegerType)
+        th.Property("buyer_coupon", th.NumberType),
+        th.Property("shop_coupon", th.NumberType)
     ).to_dict()
 class ShopListingStream(etsyStream):
     name = "shop_listings"
