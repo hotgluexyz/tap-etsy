@@ -13,7 +13,7 @@ from tap_etsy.client import etsyStream
 
 class ShopTransactionStream(etsyStream):
     name = "shop_transactions"
-    path = "/shop_id/transactions"
+    path = "/shops/shop_id/transactions"
     paginated_stream = True
     primary_keys = ["transaction_id"]
     schema = th.PropertiesList(
@@ -70,7 +70,7 @@ class ShopTransactionStream(etsyStream):
     ).to_dict()
 class ShopListingStream(etsyStream):
     name = "shop_listings"
-    path = "/shop_id/listings"
+    path = "/shops/shop_id/listings"
     paginated_stream = True
     primary_keys = ["listing_id"]
     schema = th.PropertiesList(
@@ -138,7 +138,7 @@ class ShopListingStream(etsyStream):
     ).to_dict()
 class ShopReceiptStream(etsyStream):
     name = "shop_receipts"
-    path = "/shop_id/receipts"
+    path = "/shops/shop_id/receipts"
     primary_keys = ["receipt_id"]
     replication_key = "updated_timestamp"
     schema = th.PropertiesList(
@@ -188,7 +188,7 @@ class ShopReceiptStream(etsyStream):
 
 class ShippingProfileStream(etsyStream):
     name = "shipping_profiles"
-    path = "/shop_id/shipping-profiles"
+    path = "/shops/shop_id/shipping-profiles"
     primary_keys = ["shipping_profile_id"]
     paginated_stream = False
     schema = th.PropertiesList(
@@ -255,29 +255,11 @@ class ShippingProfileStream(etsyStream):
 
 class ShopsStream(etsyStream):
     name = "shops"
-    path = ""
+    path = "/users/user_id/shops"
     primary_keys = ["shop_id"]
-    paginated_stream = True
+    paginated_stream = False
+    records_jsonpath = "$[*]"
     schema = th.PropertiesList(
-        th.Property("shop_id", th.IntegerType),  # The unique positive non-zero numeric ID for an Etsy Shop.
-        th.Property("user_id", th.IntegerType),  # The numeric user ID of the user who owns this shop.
-        th.Property("shop_name", th.StringType),  # The shop's name string.
-        th.Property("create_date", th.IntegerType),  # The date and time this shop was created, in epoch seconds.
-        th.Property("created_timestamp", th.IntegerType),  # The date and time this shop was created, in epoch seconds.
-        th.Property("title", th.StringType, required=False),  # Nullable: A brief heading string for the shop's main page.
-        th.Property("announcement", th.StringType, required=False),  # Nullable: An announcement string for buyers.
-        th.Property("currency_code", th.StringType),  # The ISO code for the shop's currency.
-        th.Property("is_vacation", th.BooleanType),  # True if not accepting purchases.
-        th.Property("vacation_message", th.StringType, required=False),  # Nullable: Displayed when on vacation.
-        th.Property("sale_message", th.StringType, required=False),  # Nullable: Sent to buyers after purchase.
-        th.Property("digital_sale_message", th.StringType, required=False),  # Nullable: Sent to digital item buyers.
-        th.Property("update_date", th.IntegerType),  # Last update time, in epoch seconds.
-        th.Property("updated_timestamp", th.IntegerType),  # Last update time, in epoch seconds.
-        th.Property("listing_active_count", th.IntegerType),  # Number of active listings.
-        th.Property("digital_listing_count", th.IntegerType),  # Number of digital listings.
-        th.Property("login_name", th.StringType),  # Shop owner's login name.
-        th.Property("accepts_custom_requests", th.BooleanType),  # True if accepts custom requests.
-        th.Property("policy_welcome", th.StringType, required=False),  # Nullable: Policy welcome string.
         th.Property("policy_payment", th.StringType, required=False),  # Nullable: Payment policy string.
         th.Property("policy_shipping", th.StringType, required=False),  # Nullable: Shipping policy string.
         th.Property("policy_refunds", th.StringType, required=False),  # Nullable: Refund policy string.
@@ -315,27 +297,14 @@ class ShopsStream(etsyStream):
         next_page_token: Any | None,
     ) -> requests.PreparedRequest:
         """Prepare a request object, ensuring shop_name parameter is always included."""
+
+        prepared_request_for_curr_user = self.build_prepared_request(
+            method="GET",
+            url=self.url_base + "/users/me",
+            headers=self.http_headers,
+        )
+        response = self.requests_session.send(prepared_request_for_curr_user, timeout=self.timeout)
+        user_id = str(response.json().get("user_id"))
+        self.path = self.path.replace("user_id", user_id)
         prepared_request = super().prepare_request(context, next_page_token)
-        
-        # Ensure shop_name parameter is always included, even if empty
-        parsed_url = urlparse(prepared_request.url)
-        query_params = parse_qs(parsed_url.query, keep_blank_values=True)
-        
-        # Always set shop_name to empty string (ensure it's included even if empty)
-        query_params["shop_name"] = [""]
-        
-        # Rebuild the URL with the shop_name parameter
-        new_query = urlencode(query_params, doseq=True)
-        new_url = urlunparse((
-            parsed_url.scheme,
-            parsed_url.netloc,
-            parsed_url.path,
-            parsed_url.params,
-            new_query,
-            parsed_url.fragment
-        ))
-        
-        # Update the prepared request URL
-        prepared_request.url = new_url
-        
         return prepared_request
