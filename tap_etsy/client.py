@@ -66,7 +66,7 @@ class etsyStream(RESTStream):
     def url_base(self) -> str:
         """Return the API URL root, configurable via tap settings."""
         
-        return f"https://openapi.etsy.com/v3/application/shops/shop_id"
+        return f"https://openapi.etsy.com/v3/application"
     records_jsonpath = "$.results[*]"  # Or override `parse_response`.
 
     # Set this value or override `get_new_paginator`.

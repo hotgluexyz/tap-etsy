@@ -3,14 +3,17 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
+from urllib.parse import urlencode, urlparse, parse_qs, urlunparse
 
 from singer_sdk import typing as th  # JSON Schema typing helpers
+import requests
 
 from tap_etsy.client import etsyStream
 
 class ShopTransactionStream(etsyStream):
     name = "shop_transactions"
-    path = "/transactions"
+    path = "/shops/shop_id/transactions"
     paginated_stream = True
     primary_keys = ["transaction_id"]
     schema = th.PropertiesList(
@@ -67,7 +70,7 @@ class ShopTransactionStream(etsyStream):
     ).to_dict()
 class ShopListingStream(etsyStream):
     name = "shop_listings"
-    path = "/listings"
+    path = "/shops/shop_id/listings"
     paginated_stream = True
     primary_keys = ["listing_id"]
     schema = th.PropertiesList(
@@ -135,7 +138,7 @@ class ShopListingStream(etsyStream):
     ).to_dict()
 class ShopReceiptStream(etsyStream):
     name = "shop_receipts"
-    path = "/receipts"
+    path = "/shops/shop_id/receipts"
     primary_keys = ["receipt_id"]
     replication_key = "updated_timestamp"
     schema = th.PropertiesList(
@@ -185,7 +188,7 @@ class ShopReceiptStream(etsyStream):
 
 class ShippingProfileStream(etsyStream):
     name = "shipping_profiles"
-    path = "/shipping-profiles"
+    path = "/shops/shop_id/shipping-profiles"
     primary_keys = ["shipping_profile_id"]
     paginated_stream = False
     schema = th.PropertiesList(
@@ -249,3 +252,59 @@ class ShippingProfileStream(etsyStream):
         th.Property("domestic_handling_fee", th.NumberType),
         th.Property("international_handling_fee", th.NumberType),
     ).to_dict()
+
+class ShopsStream(etsyStream):
+    name = "shops"
+    path = "/users/user_id/shops"
+    primary_keys = ["shop_id"]
+    paginated_stream = False
+    records_jsonpath = "$[*]"
+    schema = th.PropertiesList(
+        th.Property("policy_payment", th.StringType, required=False),  # Nullable: Payment policy string.
+        th.Property("policy_shipping", th.StringType, required=False),  # Nullable: Shipping policy string.
+        th.Property("policy_refunds", th.StringType, required=False),  # Nullable: Refund policy string.
+        th.Property("policy_additional", th.StringType, required=False),  # Nullable: Additional policies string.
+        th.Property("policy_seller_info", th.StringType, required=False),  # Nullable: Seller info string.
+        th.Property("policy_update_date", th.IntegerType),  # Last shop policies update, in epoch seconds.
+        th.Property("policy_has_private_receipt_info", th.BooleanType),  # True if EU receipts display private info.
+        th.Property("has_unstructured_policies", th.BooleanType),  # True if displays unstructured policies.
+        th.Property("policy_privacy", th.StringType, required=False),  # Nullable: Privacy policy string.
+        th.Property("vacation_autoreply", th.StringType, required=False),  # Nullable: Vacation auto reply string.
+        th.Property("url", th.StringType),  # URL for the shop.
+        th.Property("image_url_760x100", th.StringType, required=False),  # Nullable: Banner image URL.
+        th.Property("num_favorers", th.IntegerType),  # Number of users who favorited the shop.
+        th.Property("languages", th.ArrayType(th.StringType)),  # List of shop language strings.
+        th.Property("icon_url_fullxfull", th.StringType, required=False),  # Nullable: Shop icon URL.
+        th.Property("is_using_structured_policies", th.BooleanType),  # True if using structured policies.
+        th.Property("has_onboarded_structured_policies", th.BooleanType),  # True if viewed/accepted structured policies onboarding.
+        th.Property("include_dispute_form_link", th.BooleanType),  # True if shop policies include EU dispute link.
+        th.Property("is_direct_checkout_onboarded", th.BooleanType),  # True if onboarded Etsy direct checkout (deprecated).
+        th.Property("is_etsy_payments_onboarded", th.BooleanType),  # True if onboarded Etsy Payments.
+        th.Property("is_calculated_eligible", th.BooleanType),  # True if eligible for calculated shipping.
+        th.Property("is_opted_in_to_buyer_promise", th.BooleanType),  # True if opted in to buyer promise.
+        th.Property("is_shop_us_based", th.BooleanType),  # True if shop is US based.
+        th.Property("transaction_sold_count", th.IntegerType),  # Total sales (transactions).
+        th.Property("shipping_from_country_iso", th.StringType, required=False),  # Nullable: Shop shipping from country ISO.
+        th.Property("shop_location_country_iso", th.StringType, required=False),  # Nullable: Shop country location ISO.
+        th.Property("review_count", th.IntegerType, required=False),  # Nullable: Number of shop listing reviews in past year.
+        th.Property("review_average", th.NumberType, required=False),  # Nullable: Avg. rating for reviews in past year.
+    ).to_dict()
+
+    # need this to set shop_name="". setting it in get_url_params was stripping it in the end from final prepared request because of empty string
+    def prepare_request(
+        self,
+        context: dict | None,
+        next_page_token: Any | None,
+    ) -> requests.PreparedRequest:
+        """Prepare a request object, ensuring shop_name parameter is always included."""
+
+        prepared_request_for_curr_user = self.build_prepared_request(
+            method="GET",
+            url=self.url_base + "/users/me",
+            headers=self.http_headers,
+        )
+        response = self.requests_session.send(prepared_request_for_curr_user, timeout=self.timeout)
+        user_id = str(response.json().get("user_id"))
+        self.path = self.path.replace("user_id", user_id)
+        prepared_request = super().prepare_request(context, next_page_token)
+        return prepared_request
