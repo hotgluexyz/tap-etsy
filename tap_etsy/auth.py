@@ -58,14 +58,16 @@ class etsyAuthenticator(OAuthAuthenticator, metaclass=SingletonMeta):
         if not self.is_token_valid():
             self.update_access_token()
 
-        if not self.access_token:    
+        if not self.access_token:
             access_token = self.config.get("access_token")
         else:
-            access_token = self.access_token    
+            access_token = self.access_token
         result["Authorization"] = f"Bearer {access_token}"
-        result["x-api-key"] = self.config["client_id"]
+        keystring = self.config["client_id"]
+        secret = self.config["client_secret"]
+        result["x-api-key"] = f"{keystring}:{secret}"
         return result
-    
+
     def clean_shop_name(self, shop_name):
         clean_shop_name = shop_name
         # if .etsy. is in shop_name get the first part of the string
